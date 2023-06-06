@@ -11,6 +11,13 @@ numerical_features = ["age", "trestbps", "chol", "thalach", "oldpeak"]
 
 def CalculateProbabilities(train_df):
     labels = np.array(train_df["disease"])
+    class0 = (labels == 0)
+    class1 = (labels == 1)
+    num_class0 = np.sum(class0, axis=0, keepdims=False)
+    num_class1 = np.sum(class1, axis=0, keepdims=False)
+    p_class0 = num_class0 / train_size
+    p_class1 = num_class1 / train_size
+    probabilities["disease"] = [p_class0, p_class1]
 
     for column in df.columns:
         feature = np.array(train_df[column])
@@ -21,22 +28,24 @@ def CalculateProbabilities(train_df):
 
             for value in values.keys():
                 matches = (feature == value)
-                num_matches = np.sum(matches, axis=0, keepdims=False)
-                class0 = (labels == 0)
-                class1 = (labels == 1)
                 p0 = matches * class0
                 p1 = matches * class1
-                p0 = np.sum(p0, axis=0, keepdims=False) / num_matches
-                p1 = np.sum(p1, axis=0, keepdims=False) / num_matches
+                p0 = np.sum(p0, axis=0, keepdims=False) / num_class0
+                p1 = np.sum(p1, axis=0, keepdims=False) / num_class1
                 probability[value] = [p0, p1]
 
             probabilities[column] = probability
 
         elif column in numerical_features:
-            class0 = (labels == 0)
-            class1 = (labels == 1)
-            matches0 = feature * class0
-            matches1 = feature * class1
+            matches0 = []
+            matches1 = []
+            for i in range(train_size):
+                if class0[i]:
+                    matches0.append(feature[i])
+                if class1[i]:
+                    matches1.append(feature[i])
+            matches0 = np.array(matches0)
+            matches1 = np.array(matches1)
             probabilities[column] = [hf.MeanVariance(matches0), hf.MeanVariance(matches1)]
 
 
@@ -58,6 +67,9 @@ def Predict(record):
         elif column in categorical_features:
             p0 *= probabilities[column][value][0]
             p1 *= probabilities[column][value][1]
+
+    p0 *= probabilities["disease"][0]
+    p1 *= probabilities["disease"][1]
 
     if p0 > p1:
         return 0
