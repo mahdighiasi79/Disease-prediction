@@ -11,4 +11,4 @@ For numerical features, we assume that the values are distributed normally. Ther
 
 For evaluation, we split the data into two separate sets: train set, and test set.
 We use the train set to calculate the needed probabilities for Naive Bayes. And we use the test set to report the predictions' accuracy.
-Based on testing, the proposed model gives an accuracy of about  87.5 %.
+Based on testing, the proposed model gives an accuracy of about  87.5%.
